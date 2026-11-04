@@ -1,0 +1,124 @@
+/* Grafana's 24-column grid as nested grids (host.luau renderTree): a .gf-gN grid has N columns, a
+   .gf-span takes data-w of them, and a panel cell is data-h rows of 30px with 8px gaps tall. */
+[data-surface='plugin.grafana.dashboard'] { font-family: var(--sans); }
+[data-surface='plugin.grafana.dashboard'] [data-role='grafana.header'] { align-items: center; flex-wrap: wrap; gap: 8px; font-size: 1.1em; }
+[data-surface='plugin.grafana.dashboard'] .gf-stack { display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 0; }
+[data-surface='plugin.grafana.dashboard'] .gf-span { min-width: 0; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell { min-width: 0; overflow: hidden; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell > * { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
+[data-surface='plugin.grafana.dashboard'] [data-role='grafana.panel'] { background: var(--card); border-radius: var(--r-card); }
+[data-surface='plugin.grafana.dashboard'] [data-role='grafana.panel'] > .sf-card-head .sf-t-strong { font-weight: 600; color: var(--t1); }
+[data-surface='plugin.grafana.dashboard'] [data-role='grafana.chart'] .sf-img-svg { width: 100%; height: auto; display: block; }
+/* Time series fill their cell: the SVG scales to fit (viewBox, meet), so a wrong size estimate rescales it instead of clipping. */
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-type='timeseries'] > .sf-card { display: flex; flex-direction: column; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-type='timeseries'] .sf-card-body { flex: 1 1 auto; min-height: 0; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-type='timeseries'] [data-role='grafana.chart'] { height: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-type='timeseries'] [data-role='grafana.chart'] .sf-img-svg { height: 100%; }
+[data-surface='plugin.grafana.dashboard'] [data-role='grafana.row'] { align-self: flex-start; font-weight: 600; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-type='logs'] { font-family: var(--mono); font-size: 0.9em; }
+[data-surface='plugin.grafana.dashboard'] .gf-g1 { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g8 { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g9 { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g10 { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g11 { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g13 { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g14 { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g15 { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g16 { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g17 { display: grid; grid-template-columns: repeat(17, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g18 { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g19 { display: grid; grid-template-columns: repeat(19, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g20 { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g21 { display: grid; grid-template-columns: repeat(21, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g22 { display: grid; grid-template-columns: repeat(22, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g23 { display: grid; grid-template-columns: repeat(23, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-g24 { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 8px; width: 100%; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='1'] { grid-column: span 1; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='2'] { grid-column: span 2; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='3'] { grid-column: span 3; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='4'] { grid-column: span 4; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='5'] { grid-column: span 5; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='6'] { grid-column: span 6; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='7'] { grid-column: span 7; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='8'] { grid-column: span 8; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='9'] { grid-column: span 9; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='10'] { grid-column: span 10; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='11'] { grid-column: span 11; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='12'] { grid-column: span 12; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='13'] { grid-column: span 13; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='14'] { grid-column: span 14; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='15'] { grid-column: span 15; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='16'] { grid-column: span 16; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='17'] { grid-column: span 17; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='18'] { grid-column: span 18; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='19'] { grid-column: span 19; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='20'] { grid-column: span 20; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='21'] { grid-column: span 21; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='22'] { grid-column: span 22; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='23'] { grid-column: span 23; }
+[data-surface='plugin.grafana.dashboard'] .gf-span[data-w='24'] { grid-column: span 24; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='1'] { height: 30px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='2'] { height: 68px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='3'] { height: 106px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='4'] { height: 144px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='5'] { height: 182px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='6'] { height: 220px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='7'] { height: 258px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='8'] { height: 296px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='9'] { height: 334px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='10'] { height: 372px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='11'] { height: 410px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='12'] { height: 448px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='13'] { height: 486px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='14'] { height: 524px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='15'] { height: 562px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='16'] { height: 600px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='17'] { height: 638px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='18'] { height: 676px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='19'] { height: 714px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='20'] { height: 752px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='21'] { height: 790px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='22'] { height: 828px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='23'] { height: 866px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='24'] { height: 904px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='25'] { height: 942px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='26'] { height: 980px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='27'] { height: 1018px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='28'] { height: 1056px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='29'] { height: 1094px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='30'] { height: 1132px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='31'] { height: 1170px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='32'] { height: 1208px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='33'] { height: 1246px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='34'] { height: 1284px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='35'] { height: 1322px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='36'] { height: 1360px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='37'] { height: 1398px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='38'] { height: 1436px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='39'] { height: 1474px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='40'] { height: 1512px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='41'] { height: 1550px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='42'] { height: 1588px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='43'] { height: 1626px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='44'] { height: 1664px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='45'] { height: 1702px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='46'] { height: 1740px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='47'] { height: 1778px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-h='48'] { height: 1816px; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='13'] .sf-stat-value { font-size: 13px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='15'] .sf-stat-value { font-size: 15px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='18'] .sf-stat-value { font-size: 18px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='22'] .sf-stat-value { font-size: 22px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='26'] .sf-stat-value { font-size: 26px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='32'] .sf-stat-value { font-size: 32px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='40'] .sf-stat-value { font-size: 40px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='48'] .sf-stat-value { font-size: 48px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='56'] .sf-stat-value { font-size: 56px; line-height: 1.15; white-space: nowrap; }
+[data-surface='plugin.grafana.dashboard'] .gf-cell[data-fit='64'] .sf-stat-value { font-size: 64px; line-height: 1.15; white-space: nowrap; }

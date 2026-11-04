@@ -1,0 +1,15 @@
+schema = 1
+id = "grafana"
+name = "Grafana"
+version = "0.1.0"
+description = "Grafana dashboards drawn natively: stat, gauge, bar gauge, table, logs, text and vector time series."
+icon = "gauge"
+host = "host.luau"
+window = "window.luau"
+styles = ["style.css"]
+
+[[blocks]]
+id = "dashboard"
+title = "Grafana"
+icon = "gauge"
+palette = true
