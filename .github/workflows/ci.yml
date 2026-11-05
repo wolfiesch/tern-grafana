@@ -16,7 +16,7 @@ jobs:
       LUAU_VERSION: "0.740"
       LUAU_SHA256: 7d4035db01816f977f6e4c42e3d5e8ef4235d95e9afe63a3c38905b42dde60f2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Luau
         run: |
           curl -fsSL -o luau.zip "https://github.com/luau-lang/luau/releases/download/$LUAU_VERSION/luau-ubuntu.zip"
