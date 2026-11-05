@@ -90,6 +90,8 @@ luau tests/grafana.test.luau tests/frames.test.luau tests/units.test.luau tests/
 luau-analyze units.luau regex.luau frames.luau chart.luau grafana.luau panels.luau
 ```
 
+CI runs the same two commands on every pull request and push to `main`.
+
 Unit checks do not verify native rendering; for layout or panel changes, also load the plugin in Tern and inspect real dashboards. `TERN_GRAFANA_URL=https://play.grafana.org tests/headless.sh [N] [OUT]` opens dashboards in a headless Tern, checks that the grid follows the block's width, and saves screenshots of the first N dashboards.
 
 Layout uses only CSS that Tern's renderer supports: Grafana's absolute grid positions become nested rows and stacks (`grafana.tree`), each a `repeat(N, minmax(0, 1fr))` grid whose children span columns. A layout with no straight horizontal or vertical cut stacks its panels in reading order.

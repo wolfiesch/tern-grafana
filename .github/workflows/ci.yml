@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      LUAU_VERSION: "0.740"
+      LUAU_SHA256: 7d4035db01816f977f6e4c42e3d5e8ef4235d95e9afe63a3c38905b42dde60f2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Luau
+        run: |
+          curl -fsSL -o luau.zip "https://github.com/luau-lang/luau/releases/download/$LUAU_VERSION/luau-ubuntu.zip"
+          echo "$LUAU_SHA256  luau.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/luau" && unzip -q luau.zip -d "$RUNNER_TEMP/luau" && rm luau.zip
+          echo "$RUNNER_TEMP/luau" >> "$GITHUB_PATH"
+      - name: Unit tests
+        run: for f in tests/*.test.luau; do luau "$f"; done
+      - name: Type check
+        run: luau-analyze units.luau regex.luau frames.luau chart.luau grafana.luau panels.luau
