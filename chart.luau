@@ -266,14 +266,23 @@ local function clip(text: string, px: number): string
 end
 
 -- Index of the sample in ascending times `t` nearest `at` whose value is finite, among the two around
--- `at`, when it lies within `limit` ms of it.
-function M.nearest(t: { any }, v: { any }, at: number, limit: number): number?
+-- `at`, when it lies within `limit` ms of it. Without a `limit`, a sample owns half the gap to each
+-- neighbour (past either end, half the gap to the sample beside it), as Grafana snaps its tooltip to the
+-- nearest point however sparse the series is.
+function M.nearest(t: { any }, v: { any }, at: number, limit: number?): number?
 	local lo, hi = 1, #t
 	while lo <= hi do
 		local mid = (lo + hi) // 2
 		if (tonumber(t[mid]) or -math.huge) < at then lo = mid + 1 else hi = mid - 1 end
 	end
-	local best, bestD = nil, limit
+	if limit == nil and #t < 2 then
+		limit = math.huge
+	elseif limit == nil then
+		local a, b = math.clamp(lo - 1, 1, #t - 1), math.clamp(lo, 2, #t)
+		local ta, tb = t[a], t[b]
+		limit = if type(ta) == "number" and type(tb) == "number" and tb > ta then (tb - ta) / 2 else math.huge
+	end
+	local best, bestD = nil, limit :: number
 	for _, j in { lo - 1, lo } do
 		local tj = t[j]
 		if type(tj) == "number" and finite(v[j]) and math.abs(tj - at) <= bestD then
@@ -548,14 +557,15 @@ function M.svg(series: { Series }, o: Opts): string
 	end
 
 	-- Crosshair: a dot on each series at its sample nearest the cursor, and their values beside it. A sample
-	-- owns half its interval on each side, so a missing value at the cursor shows as missing.
+	-- owns half its interval on each side (half the gap to its neighbours when the series has no interval), so a
+	-- missing value at the cursor shows as missing.
 	local cursor = o.cursor
 	if cursor and cursor >= from and cursor <= to then
 		local x = px(cursor)
 		drawCrosshair(add, x, top, plotH)
 		local rows, keys, dots = {}, {}, {}
 		for i, s in series do
-			local j = M.nearest(s.t, s.v, cursor, if s.interval then s.interval / 2 else (to - from) / 100)
+			local j = M.nearest(s.t, s.v, cursor, if s.interval then s.interval / 2 else nil)
 			local y = j and tops[i][j]
 			if j and finite(y) and s.t[j] >= from and s.t[j] <= to then
 				table.insert(dots, string.format("<circle cx=\"%s\" cy=\"%s\" r=\"3\" fill=\"%s\"/>", r1(px(s.t[j])), r1(py(math.clamp(y, ylo, yhi))), s.color))

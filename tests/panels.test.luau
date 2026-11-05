@@ -138,6 +138,15 @@ do
 	eq(chart.nearest(t, v, -50, 100), 1, "before the first sample")
 	eq(chart.nearest(t, v, 99, 100), 4, "after the last sample")
 	eq(chart.nearest({}, {}, 5, 100), nil, "no samples")
+	-- Without a limit, sparse samples own half the gap to each neighbour, whatever its length.
+	local sparse = { 0, 900e3, 1800e3 }
+	eq(chart.nearest(sparse, { 5, 6, 7 }, 1300e3, nil), 2, "sparse: the nearer sample, far from both")
+	eq(chart.nearest(sparse, { 5, 6, 7 }, 1400e3, nil), 3, "sparse: past the midpoint")
+	eq(chart.nearest(sparse, { 5, false, 7 }, 1100e3, nil), nil, "sparse: a missing value still shows as missing")
+	eq(chart.nearest(sparse, { 5, 6, 7 }, 2200e3, nil), 3, "sparse: within half a gap after the end")
+	eq(chart.nearest(sparse, { 5, 6, 7 }, 2400e3, nil), nil, "sparse: not past half a gap after the end")
+	eq(chart.nearest({ 100 }, { 1 }, 9e6, nil), 1, "one sample answers anywhere")
+	eq(chart.nearest({}, {}, 5, nil), nil, "no samples, no limit")
 end
 
 -- Crosshair panels. Times sit in 2026: local time zone lookups fail near the epoch. Values avoid the axis tick labels.
