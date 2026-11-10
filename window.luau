@@ -1,5 +1,7 @@
 -- Palette commands: open a dashboard by name, and set the Grafana URL and token.
 
+local keychain = require("./keychain")
+
 local BLOCK = "grafana.dashboard"
 
 local function baseUrl(): string?
@@ -9,12 +11,39 @@ local function baseUrl(): string?
 	return (url:gsub("/+$", ""))
 end
 
--- `TERN_GRAFANA_TOKEN` wins over the stored token, as in host.luau.
-local function token(): string?
+local function envToken(): string?
 	local env = tern.getenv("TERN_GRAFANA_TOKEN")
-	if type(env) == "string" and env ~= "" then return env end
+	return if type(env) == "string" and env ~= "" then env else nil
+end
+
+local function kvToken(): string?
 	local ok, saved = pcall(tern.kv.get, "token")
 	return if ok and type(saved) == "string" and saved ~= "" then saved else nil
+end
+
+-- Calls `done(token?, cx?)` in host.luau's order: `TERN_GRAFANA_TOKEN`, a kv.json token not yet moved,
+-- the keychain; `cx` is the fresh context of an asynchronous keychain read.
+local function withToken(done: (string?, any) -> ())
+	local t = envToken() or kvToken()
+	if t or not keychain.available() then return done(t, nil) end
+	keychain.read(function(saved, err, cx)
+		if err then print("grafana: keychain: " .. err) end
+		done(saved, cx)
+	end)
+end
+
+-- Moves a token saved in kv.json before the keychain into it.
+local function migrateToken()
+	local t = kvToken()
+	if not t or not keychain.available() then return end
+	keychain.write(t, function(err)
+		if err then
+			print("grafana: keychain: " .. err)
+			return
+		end
+		if kvToken() == t then tern.kv.set("token", nil) end
+		keychain.bump()
+	end)
 end
 
 -- Blocks size their chart images from cells, and only the window can read the terminal font size, so the
@@ -30,7 +59,10 @@ end
 
 -- A restored block opens without the command, and a font change resizes panes; both are followed by a
 -- window start or a focus change.
-tern.on("window_start", function(cx) recordCellPx(cx) end)
+tern.on("window_start", function(cx)
+	recordCellPx(cx)
+	migrateToken()
+end)
 tern.on("focus", function(_ev, cx) recordCellPx(cx) end)
 
 local function openBlock(cx, args)
@@ -51,35 +83,41 @@ local function setUrl(cx, after)
 		end)
 end
 
--- Stored in kv.json, not `tern.secrets`: the host half sends every query and cannot read secrets. The
--- field never shows the saved token; an empty one clears it.
+-- In the macOS keychain (keychain.luau), elsewhere in kv.json: `tern.secrets` is window-only and the
+-- host half sends every query. The field never shows the saved token; an empty one clears it.
 local function setToken(cx)
 	cx:prompt({ placeholder = "Grafana service account token (empty clears it)", icon = "gauge", action = "save" })
 		:next(function(text, _err, cx2)
 			if type(text) ~= "string" then return end
 			local c = cx2 or cx
 			local t = text:match("^%s*(.-)%s*$") :: string
-			if t == "" then
-				tern.kv.set("token", nil)
-				c:toast("success", "Grafana token cleared")
-				return
+			local where = if keychain.available() then "the macOS keychain" else "the plugin's kv.json"
+			local function saved(err: string?, cx3)
+				local c3 = cx3 or c
+				if err then
+					c3:toast("error", "Could not save the Grafana token", err)
+					return
+				end
+				tern.kv.set("token", if t ~= "" and not keychain.available() then t else nil)
+				if keychain.available() then keychain.bump() end
+				if t == "" then
+					c3:toast("success", "Grafana token cleared")
+				else
+					c3:toast("success", "Grafana token saved in " .. where,
+						if envToken() then "TERN_GRAFANA_TOKEN is set and takes precedence" else nil)
+				end
 			end
-			tern.kv.set("token", t)
-			local env = tern.getenv("TERN_GRAFANA_TOKEN")
-			c:toast("success", "Grafana token saved",
-				if type(env) == "string" and env ~= "" then "TERN_GRAFANA_TOKEN is set and takes precedence" else nil)
+			if not keychain.available() then
+				saved(nil, c)
+			elseif t == "" then
+				keychain.clear(saved)
+			else
+				keychain.write(t, saved)
+			end
 		end)
 end
 
-local function open(cx)
-	local base = baseUrl()
-	if not base then
-		setUrl(cx, open)
-		return
-	end
-	local headers = { Accept = "application/json" }
-	local t = token()
-	if t then headers.Authorization = "Bearer " .. t end
+local function fetchList(cx, base: string, headers: { [string]: string })
 	tern.fetch(base .. "/api/search?type=dash-db&limit=1000", { headers = headers, timeout_ms = 10_000 }, function(res, cx2)
 		local c = cx2 or cx
 		local ok, list = false, nil
@@ -106,6 +144,19 @@ local function open(cx)
 		c:pick({ items = items, placeholder = "Grafana dashboard", icon = "gauge", action = "open" }):next(function(item, _err, cx3)
 			if type(item) == "table" and type(item.uid) == "string" then openBlock(cx3 or c, { item.uid }) end
 		end)
+	end)
+end
+
+local function open(cx)
+	local base = baseUrl()
+	if not base then
+		setUrl(cx, open)
+		return
+	end
+	withToken(function(t, cx2)
+		local headers = { Accept = "application/json" }
+		if t then headers.Authorization = "Bearer " .. t end
+		fetchList(cx2 or cx, base, headers)
 	end)
 end
 

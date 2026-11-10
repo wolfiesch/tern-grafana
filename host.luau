@@ -5,6 +5,7 @@ local grafana = require("./grafana")
 local frames = require("./frames")
 local panels = require("./panels")
 local chart = require("./chart")
+local keychain = require("./keychain")
 
 local ui = tern.ui
 local isNull = function(v: any): boolean return v == tern.json.null end
@@ -43,13 +44,55 @@ local function baseUrl(): string?
 	return (url:gsub("/+$", ""))
 end
 
--- `TERN_GRAFANA_TOKEN` from Tern's launch environment, else the token **Set Grafana token** stored. Host
--- halves cannot read `tern.secrets`, so the stored token lives in the plugin's kv.json.
-local function token(): string?
+-- `TERN_GRAFANA_TOKEN` from Tern's launch environment, else the token **Set Grafana token** stored: in
+-- the macOS keychain (read again whenever kv "token_rev" changes), elsewhere in kv.json. A kv.json token
+-- from before the keychain still counts until the window half moves it. A failed keychain read sends
+-- requests without the token and retries after KEYCHAIN_RETRY_MS.
+local KEYCHAIN_RETRY_MS = 30_000
+local stored = {
+	loaded = false, rev = nil :: any, token = nil :: string?,
+	err = nil :: string?, retry_at = 0, loading = false,
+}
+
+local function envToken(): string?
 	local env = tern.getenv("TERN_GRAFANA_TOKEN")
-	if type(env) == "string" and env ~= "" then return env end
+	return if type(env) == "string" and env ~= "" then env else nil
+end
+
+local function kvToken(): string?
 	local ok, saved = pcall(tern.kv.get, "token")
 	return if ok and type(saved) == "string" and saved ~= "" then saved else nil
+end
+
+local function tokenRev(): any
+	local ok, rev = pcall(tern.kv.get, "token_rev")
+	return if ok then rev else nil
+end
+
+-- Whether the keychain must be read before a request can carry the token; starts that read, which
+-- calls `after` once done.
+local function tokenPending(after: () -> ()): boolean
+	if envToken() or kvToken() or not keychain.available() then return false end
+	if stored.loading then return true end
+	local rev = tokenRev()
+	if stored.loaded and stored.rev == rev then return false end
+	if stored.err and stored.rev == rev and now() < stored.retry_at then return false end
+	stored.loading = true
+	keychain.read(function(t, err)
+		stored.loading, stored.rev, stored.err = false, rev, err
+		if err then
+			stored.loaded, stored.token, stored.retry_at = false, nil, now() + KEYCHAIN_RETRY_MS
+			print("grafana: keychain: " .. err)
+		else
+			stored.loaded, stored.token = true, t
+		end
+		after()
+	end)
+	return true
+end
+
+local function token(): string?
+	return envToken() or kvToken() or (if keychain.available() then stored.token else nil)
 end
 
 local function headers(): { [string]: string }
@@ -68,12 +111,15 @@ local function errorText(res: any): string
 	if res.error then return if res.timed_out then "Grafana did not answer within 30s" else tostring(res.error) end
 	local ok, body = pcall(tern.json.decode, res.body)
 	local msg = if ok and type(body) == "table" and type(body.message) == "string" then body.message else nil
-	local hint = if res.status == 401 then " (palette: Set Grafana token)" else ""
+	local hint = if res.status ~= 401 then ""
+		elseif stored.err then " (keychain: " .. stored.err .. "; palette: Set Grafana token)"
+		else " (palette: Set Grafana token)"
 	return string.format("HTTP %d%s%s", res.status, if msg then ": " .. msg else "", hint)
 end
 
 local pump
 function pump()
+	if #queue > 0 and tokenPending(function() pump() end) then return end
 	while inflight < MAX_INFLIGHT and #queue > 0 do
 		local job = table.remove(queue, 1)
 		local base = baseUrl()
