@@ -45,9 +45,14 @@ local function baseUrl(): string?
 end
 
 -- `TERN_GRAFANA_TOKEN` from Tern's launch environment, else the token **Set Grafana token** stored: in
--- the macOS keychain (read once per kv "token_rev"), elsewhere in kv.json. A kv.json token from before
--- the keychain still counts until the window half moves it.
-local stored = { rev = nil :: any, token = nil :: string?, err = nil :: string?, loading = false }
+-- the macOS keychain (read again whenever kv "token_rev" changes), elsewhere in kv.json. A kv.json token
+-- from before the keychain still counts until the window half moves it. A failed keychain read sends
+-- requests without the token and retries after KEYCHAIN_RETRY_MS.
+local KEYCHAIN_RETRY_MS = 30_000
+local stored = {
+	loaded = false, rev = nil :: any, token = nil :: string?,
+	err = nil :: string?, retry_at = 0, loading = false,
+}
 
 local function envToken(): string?
 	local env = tern.getenv("TERN_GRAFANA_TOKEN")
@@ -68,16 +73,21 @@ end
 -- calls `after` once done.
 local function tokenPending(after: () -> ()): boolean
 	if envToken() or kvToken() or not keychain.available() then return false end
+	if stored.loading then return true end
 	local rev = tokenRev()
-	if stored.rev == rev and not stored.loading then return false end
-	if not stored.loading then
-		stored.loading = true
-		keychain.read(function(t, err)
-			stored.rev, stored.token, stored.err, stored.loading = rev, t, err, false
-			if err then print("grafana: keychain: " .. err) end
-			after()
-		end)
-	end
+	if stored.loaded and stored.rev == rev then return false end
+	if stored.err and stored.rev == rev and now() < stored.retry_at then return false end
+	stored.loading = true
+	keychain.read(function(t, err)
+		stored.loading, stored.rev, stored.err = false, rev, err
+		if err then
+			stored.loaded, stored.token, stored.retry_at = false, nil, now() + KEYCHAIN_RETRY_MS
+			print("grafana: keychain: " .. err)
+		else
+			stored.loaded, stored.token = true, t
+		end
+		after()
+	end)
 	return true
 end
 
