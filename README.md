@@ -55,7 +55,7 @@ Authentication:
 - A Grafana that allows anonymous viewing, or sits behind an authenticating proxy (Tailscale Serve, an SSO proxy), needs nothing more.
 - Otherwise, create a service account with the Viewer role in Grafana (**Administration › Users and access › Service accounts**), add a token, and paste it into **Set Grafana token**. An empty entry clears it. A request that Grafana rejects with HTTP 401 points to this command.
 
-The URL and token are saved in the plugin's data (`kv.json` in Tern's plugin data directory), in plain text: Tern's keychain API is not available to the half of the plugin that sends requests. Use a Viewer token; the plugin never needs more.
+On macOS the token is saved in the login keychain (item `tern-grafana`, created through `/usr/bin/security` so both halves of the plugin can read it without a prompt); a token saved in `kv.json` by an earlier version moves there the next time a Tern window starts. On Linux and Windows it stays in the plugin's data (`kv.json` in Tern's plugin data directory), in plain text: Tern's keychain API is not available to the half of the plugin that sends requests. The URL is always saved in `kv.json`. Use a Viewer token; the plugin never needs more.
 
 For managed setups, `TERN_GRAFANA_URL` and `TERN_GRAFANA_TOKEN` in Tern's launch environment also work. A saved URL wins over `TERN_GRAFANA_URL`; `TERN_GRAFANA_TOKEN` wins over a saved token. On macOS, Tern started from the Dock does not read shell profiles, which is why the palette commands exist.
 
@@ -81,6 +81,7 @@ The plugin only reads: it never saves dashboards, silences alerts or changes Gra
 - `chart.luau`: SVG time series, state timelines and bar charts.
 - `panels.luau`: per-panel native views.
 - `host.luau`: request queue, dashboard and list blocks.
+- `keychain.luau`: the token in the macOS keychain, through `security`.
 - `window.luau`: palette commands and dashboard picker.
 
 From this directory, with the Luau CLI installed:
